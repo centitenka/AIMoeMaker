@@ -19,7 +19,9 @@ def test_validate_pmx_complete():
     cmd = ValidatePmx()
     result = cmd.execute({}, {"model_state": state, "bpy_available": False})
     assert result["success"] is True
-    assert len(result.get("warnings", [])) == 0
+    # In test env, mmd_tools isn't installed so there may be that warning
+    non_mmd_warnings = [w for w in result.get("warnings", []) if "mmd_tools" not in w]
+    assert len(non_mmd_warnings) == 0
 
 def test_export_pmx_no_bpy():
     state = ModelState()
