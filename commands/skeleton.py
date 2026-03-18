@@ -7,6 +7,9 @@ class SetupSkeleton(BaseCommand):
     action = "setup_skeleton"
     def execute(self, params, context):
         state: ModelState = context["model_state"]
+        if context.get("bpy_available", False):
+            from blender_ops.skeleton_ops import create_skeleton
+            create_skeleton(state.body.height)
         state.skeleton.is_configured = True
         state.skeleton.ik_setup = True
         return {"success": True, "message": f"已配置MMD标准骨骼（{len(MMD_STANDARD_BONES)}根）"}
@@ -17,6 +20,9 @@ class AutoWeightPaint(BaseCommand):
         state: ModelState = context["model_state"]
         if not getattr(state.skeleton, "is_configured", False):
             return {"success": False, "error": "请先配置骨骼（setup_skeleton）"}
+        if context.get("bpy_available", False):
+            from blender_ops.skeleton_ops import auto_weight_paint
+            auto_weight_paint(state.body.height)
         return {"success": True, "message": "自动权重绘制完成"}
 
 SKELETON_COMMANDS = [SetupSkeleton, AutoWeightPaint]
