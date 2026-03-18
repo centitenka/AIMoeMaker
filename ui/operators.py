@@ -16,10 +16,12 @@ from commands.physics import PHYSICS_COMMANDS
 from commands.morph import MORPH_COMMANDS
 from commands.export import EXPORT_COMMANDS
 from prompts.system_prompt import build_system_prompt
+from core.code_sandbox import CodeSandbox
 from utils.undo import push_undo, undo
 
 _session = None
 _engine = None
+_sandbox = None
 _response_queue = queue.Queue()
 
 def get_session():
@@ -40,6 +42,12 @@ def get_engine():
         for cmd_cls in all_commands:
             _engine.register(cmd_cls)
     return _engine
+
+def get_sandbox():
+    global _sandbox
+    if _sandbox is None:
+        _sandbox = CodeSandbox(timeout=30)
+    return _sandbox
 
 def _get_addon_name():
     pkg = __package__
@@ -107,8 +115,10 @@ class AIMM_OT_SendMessage(bpy.types.Operator):
 
         if response.intents:
             push_undo("AI操作")
+            sandbox = get_sandbox()
             router = IntentRouter(
-                command_handler=lambda action, params: engine.execute(action, params, context={"model_state": session.model_state, "bpy_available": True})
+                command_handler=lambda action, params: engine.execute(action, params, context={"model_state": session.model_state, "bpy_available": True}),
+                code_handler=lambda code, desc: sandbox.execute(code, desc),
             )
             results = router.execute(response)
             if any(not r.get("success", False) for r in results):
