@@ -16,14 +16,9 @@ class AddHair(BaseCommand):
             self._create_hair_mesh(state, context)
         return {"success": True, "message": f"已添加{style}发型"}
     def _create_hair_mesh(self, state, context):
-        import bpy
-        for obj in bpy.data.objects:
-            if obj.get("aimm_type") == "hair":
-                bpy.data.objects.remove(obj, do_unlink=True)
-        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.15, location=(0, 0, state.body.height / 100))
-        hair_obj = bpy.context.active_object
-        hair_obj.name = "AIMoeMaker_Hair"
-        hair_obj["aimm_type"] = "hair"
+        from blender_ops.hair_ops import create_hair
+        head_height = state.body.height / 100.0  # Convert cm to meters
+        create_hair(state.hair.style, state.hair.colors, state.hair.length, state.hair.gradient, head_height)
 
 class ModifyHairStyle(BaseCommand):
     action = "modify_hair_style"
