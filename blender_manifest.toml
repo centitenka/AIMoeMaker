@@ -6,6 +6,7 @@ name = "AIMoeMaker"
 tagline = "AI-powered MMD model creation through natural language"
 maintainer = "AIMoeMaker Team"
 type = "add-on"
+license = ["SPDX:MIT"]
 
 [blender_version_min]
 major = 4
