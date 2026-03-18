@@ -11,6 +11,10 @@ class AddClothing(BaseCommand):
         physics = params.get("physics_enabled", False)
         item = ClothingItem(clothing_type=clothing_type, color=color, material=material, physics_enabled=physics)
         state.clothing.append(item)
+        if context.get("bpy_available", False):
+            from blender_ops.clothing_ops import create_clothing
+            idx = len(state.clothing) - 1
+            create_clothing(clothing_type, color, state.body.height if hasattr(state, 'body') else 158.0, idx)
         return {"success": True, "message": f"已添加服装: {clothing_type}"}
 
 class ModifyClothing(BaseCommand):
@@ -25,6 +29,9 @@ class ModifyClothing(BaseCommand):
         if "type" in params: item.clothing_type = params["type"]
         if "material" in params: item.material = params["material"]
         if "physics_enabled" in params: item.physics_enabled = params["physics_enabled"]
+        if context.get("bpy_available", False) and "color" in params:
+            from blender_ops.clothing_ops import update_clothing_color
+            update_clothing_color(index, item.color)
         return {"success": True, "message": "服装已修改"}
 
 class SetFabricMaterial(BaseCommand):
