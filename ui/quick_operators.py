@@ -94,6 +94,14 @@ class AIMM_OT_SetupSkeleton(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class AIMM_OT_AutoWeight(bpy.types.Operator):
+    bl_idname = "aimm.auto_weight"
+    bl_label = "自动权重"
+    def execute(self, context):
+        _exec_command("auto_weight_paint", {})
+        return {'FINISHED'}
+
+
 class AIMM_OT_SetupHairPhysics(bpy.types.Operator):
     bl_idname = "aimm.setup_hair_physics"
     bl_label = "头发物理"
@@ -152,6 +160,7 @@ class AIMM_OT_ExportPmx(bpy.types.Operator):
 QUICK_OPERATOR_CLASSES = [
     AIMM_OT_ApplyBody, AIMM_OT_ApplyHair, AIMM_OT_ApplyFace,
     AIMM_OT_AddClothingQuick, AIMM_OT_AddAccessoryQuick,
-    AIMM_OT_SetupSkeleton, AIMM_OT_SetupHairPhysics, AIMM_OT_SetupClothPhysics,
+    AIMM_OT_SetupSkeleton, AIMM_OT_AutoWeight,
+    AIMM_OT_SetupHairPhysics, AIMM_OT_SetupClothPhysics,
     AIMM_OT_AddExpressions, AIMM_OT_ValidatePmx, AIMM_OT_ExportPmx,
 ]
