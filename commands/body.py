@@ -95,9 +95,8 @@ class CreateBaseBody(BaseCommand):
 
     def _create_mesh(self, state, context) -> None:  # pragma: no cover
         """Create the base mesh in Blender (only called when bpy is available)."""
-        import bpy  # noqa: F401
-        # Placeholder for actual Blender mesh creation logic.
-        pass
+        from blender_ops.body_ops import create_body
+        create_body(state.body.height, state.body.body_type, state.body.bust, state.body.waist, state.body.hip, state.body.head_ratio)
 
 
 # ---------------------------------------------------------------------------
@@ -129,8 +128,8 @@ class SetHeight(BaseCommand):
 
     def _apply_height(self, state, context) -> None:  # pragma: no cover
         """Apply height scaling in Blender."""
-        import bpy  # noqa: F401
-        pass
+        from blender_ops.body_ops import apply_height
+        apply_height(state.body.height)
 
 
 # ---------------------------------------------------------------------------
@@ -167,8 +166,8 @@ class AdjustProportions(BaseCommand):
 
     def _apply_proportions(self, state, context) -> None:  # pragma: no cover
         """Apply proportion shape keys in Blender."""
-        import bpy  # noqa: F401
-        pass
+        from blender_ops.body_ops import create_body
+        create_body(state.body.height, state.body.body_type, state.body.bust, state.body.waist, state.body.hip, state.body.head_ratio)
 
 
 # ---------------------------------------------------------------------------
