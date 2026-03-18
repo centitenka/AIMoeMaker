@@ -8,10 +8,7 @@ maintainer = "AIMoeMaker Team"
 type = "add-on"
 license = ["SPDX:MIT"]
 
-[blender_version_min]
-major = 4
-minor = 2
-patch = 0
+blender_version_min = "4.2.0"
 
 [permissions]
 network = "AI API calls and asset search"
