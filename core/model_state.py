@@ -20,6 +20,11 @@ class BodyState:
     waist_ratio: float = 0.65
     hip_ratio: float = 1.0
     leg_length_ratio: float = 0.5
+    # Proportion sliders (0.0–1.0 normalized values)
+    bust: float = 0.5
+    waist: float = 0.5
+    hip: float = 0.5
+    head_ratio: float = 0.5
 
     def to_dict(self) -> dict:
         return {
@@ -29,6 +34,10 @@ class BodyState:
             "waist_ratio": self.waist_ratio,
             "hip_ratio": self.hip_ratio,
             "leg_length_ratio": self.leg_length_ratio,
+            "bust": self.bust,
+            "waist": self.waist,
+            "hip": self.hip,
+            "head_ratio": self.head_ratio,
         }
 
     @classmethod
@@ -36,6 +45,7 @@ class BodyState:
         known = {
             "height", "body_type", "chest_size",
             "waist_ratio", "hip_ratio", "leg_length_ratio",
+            "bust", "waist", "hip", "head_ratio",
         }
         kwargs = {k: v for k, v in d.items() if k in known}
         return cls(**kwargs)
