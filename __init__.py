@@ -29,14 +29,20 @@ if _bpy_available:
         _on_face_shape_update,
     )
     from ui.quick_operators import QUICK_OPERATOR_CLASSES
+    from ui.node_view import NODE_TREE_CLASSES, register_node_categories, unregister_node_categories
+    from ui.node_nodes import ALL_NODE_CLASSES, NODE_ITEMS_BY_CATEGORY
+    from ui.node_eval import NODE_EVAL_CLASSES
+    from ui.node_header import draw_aimm_node_header
 
-    ALL_CLASSES = PREFERENCE_CLASSES + OPERATOR_CLASSES + PANEL_CLASSES + QUICK_PANEL_CLASSES + QUICK_OPERATOR_CLASSES
+    ALL_CLASSES = PREFERENCE_CLASSES + OPERATOR_CLASSES + PANEL_CLASSES + QUICK_PANEL_CLASSES + QUICK_OPERATOR_CLASSES + NODE_TREE_CLASSES + ALL_NODE_CLASSES + NODE_EVAL_CLASSES
 
 def register():
     if not _bpy_available:
         return
     for cls in ALL_CLASSES:
         bpy.utils.register_class(cls)
+    register_node_categories(ALL_NODE_CLASSES, NODE_ITEMS_BY_CATEGORY)
+    bpy.types.NODE_HT_header.append(draw_aimm_node_header)
     bpy.types.Scene.aimm_chat_input = bpy.props.StringProperty(name="消息", description="输入消息给 AI 助手", default="")
     bpy.types.Scene.aimm_is_loading = bpy.props.BoolProperty(name="加载中", default=False)
 
@@ -79,6 +85,8 @@ def register():
 def unregister():
     if not _bpy_available:
         return
+    bpy.types.NODE_HT_header.remove(draw_aimm_node_header)
+    unregister_node_categories()
     del bpy.types.Scene.aimm_accessory_type
     del bpy.types.Scene.aimm_clothing_type
     del bpy.types.Scene.aimm_face_shape
