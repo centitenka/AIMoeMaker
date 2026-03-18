@@ -7,6 +7,14 @@ from core.session import SessionManager
 from core.intent_router import IntentRouter
 from core.command_engine import CommandEngine
 from commands.body import BODY_COMMANDS
+from commands.hair import HAIR_COMMANDS
+from commands.face import FACE_COMMANDS
+from commands.clothing import CLOTHING_COMMANDS
+from commands.accessory import ACCESSORY_COMMANDS
+from commands.skeleton import SKELETON_COMMANDS
+from commands.physics import PHYSICS_COMMANDS
+from commands.morph import MORPH_COMMANDS
+from commands.export import EXPORT_COMMANDS
 from prompts.system_prompt import build_system_prompt
 from utils.undo import push_undo, undo
 
@@ -24,7 +32,12 @@ def get_engine():
     global _engine
     if _engine is None:
         _engine = CommandEngine()
-        for cmd_cls in BODY_COMMANDS:
+        all_commands = (
+            BODY_COMMANDS + HAIR_COMMANDS + FACE_COMMANDS +
+            CLOTHING_COMMANDS + ACCESSORY_COMMANDS + SKELETON_COMMANDS +
+            PHYSICS_COMMANDS + MORPH_COMMANDS + EXPORT_COMMANDS
+        )
+        for cmd_cls in all_commands:
             _engine.register(cmd_cls)
     return _engine
 
