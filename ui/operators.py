@@ -6,6 +6,7 @@ from ai.adapters.openai_compat import OpenAICompatAdapter
 from core.session import SessionManager
 from core.intent_router import IntentRouter
 from core.command_engine import CommandEngine
+from asset_mgr.manager import AssetManager
 from commands.body import BODY_COMMANDS
 from commands.hair import HAIR_COMMANDS
 from commands.face import FACE_COMMANDS
@@ -22,6 +23,7 @@ from utils.undo import push_undo, undo
 _session = None
 _engine = None
 _sandbox = None
+_asset_manager = None
 _response_queue = queue.Queue()
 
 def get_session():
@@ -48,6 +50,19 @@ def get_sandbox():
     if _sandbox is None:
         _sandbox = CodeSandbox(timeout=30)
     return _sandbox
+
+def get_asset_manager():
+    global _asset_manager
+    if _asset_manager is None:
+        import os
+        # Store assets in Blender's user data path
+        try:
+            import bpy
+            base = os.path.join(bpy.utils.resource_path('USER'), "AIMoeMaker", "asset_library")
+        except Exception:
+            base = os.path.join(os.path.expanduser("~"), ".aimoemaker", "asset_library")
+        _asset_manager = AssetManager(base)
+    return _asset_manager
 
 def _get_addon_name():
     pkg = __package__
@@ -116,9 +131,11 @@ class AIMM_OT_SendMessage(bpy.types.Operator):
         if response.intents:
             push_undo("AI操作")
             sandbox = get_sandbox()
+            asset_mgr = get_asset_manager()
             router = IntentRouter(
                 command_handler=lambda action, params: engine.execute(action, params, context={"model_state": session.model_state, "bpy_available": True}),
                 code_handler=lambda code, desc: sandbox.execute(code, desc),
+                asset_handler=lambda action, params: asset_mgr.handle_intent(action, params),
             )
             results = router.execute(response)
             if any(not r.get("success", False) for r in results):
