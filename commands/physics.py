@@ -10,6 +10,14 @@ class SetupHairPhysics(BaseCommand):
         state.hair.physics_enabled = True
         state.physics.rigid_body_count = getattr(state.physics, "rigid_body_count", 0) + 10
         state.physics.joint_count = getattr(state.physics, "joint_count", 0) + 9
+        if context.get("bpy_available", False):
+            from blender_ops.physics_ops import setup_hair_physics
+            rb_count, joint_count = setup_hair_physics(
+                stiffness=params.get("stiffness", 0.5),
+                damping=params.get("damping", 0.3)
+            )
+            state.physics.rigid_body_count = rb_count
+            state.physics.joint_count = joint_count
         return {"success": True, "message": "头发物理已配置"}
 
 class SetupClothPhysics(BaseCommand):
@@ -22,6 +30,9 @@ class SetupClothPhysics(BaseCommand):
         state.clothing[index].physics_enabled = True
         state.physics.rigid_body_count = getattr(state.physics, "rigid_body_count", 0) + 8
         state.physics.joint_count = getattr(state.physics, "joint_count", 0) + 7
+        if context.get("bpy_available", False):
+            from blender_ops.physics_ops import setup_cloth_physics
+            setup_cloth_physics(index)
         return {"success": True, "message": "服装物理已配置"}
 
 PHYSICS_COMMANDS = [SetupHairPhysics, SetupClothPhysics]

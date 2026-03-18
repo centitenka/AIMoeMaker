@@ -14,6 +14,9 @@ class CreateMorph(BaseCommand):
             state.morphs.expressions = []
         if name not in state.morphs.expressions:
             state.morphs.expressions.append(name)
+        if context.get("bpy_available", False):
+            from blender_ops.morph_ops import create_morph as bpy_create_morph
+            bpy_create_morph(name, params.get("category", "other"))
         return {"success": True, "message": f"已创建表情: {name}"}
 
 class AddExpressionSet(BaseCommand):
@@ -28,6 +31,9 @@ class AddExpressionSet(BaseCommand):
         for expr in STANDARD_EXPRESSIONS:
             if expr not in state.morphs.expressions:
                 state.morphs.expressions.append(expr)
+        if context.get("bpy_available", False):
+            from blender_ops.morph_ops import add_expression_set as bpy_add_expressions
+            bpy_add_expressions(preset)
         return {"success": True, "message": f"已添加{preset}表情集（{len(STANDARD_EXPRESSIONS)}个表情）"}
 
 MORPH_COMMANDS = [CreateMorph, AddExpressionSet]
