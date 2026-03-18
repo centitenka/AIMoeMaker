@@ -1,172 +1,261 @@
+# blender_ops/hair_ops.py
 """
-Procedural hair generation using Blender curves.
+Improved procedural hair generation with layers, volume, and natural flow.
+Creates anime-style hair using layered Bezier curves with ribbon profiles.
 """
 import bpy
 import math
+import random
 from mathutils import Vector
-from blender_ops.utils import remove_aimm_objects, find_aimm_object, create_material, move_to_collection, set_active
+from blender_ops.utils import (
+    remove_aimm_objects, find_aimm_object, create_material,
+    move_to_collection, set_active
+)
 
 
-# Hair style definitions: each style defines curve control points relative to head
+# Style configs: (front_strands, side_strands, back_strands, length_mult, curve_strength)
 HAIR_CONFIGS = {
-    "short": {"strand_count": 12, "length_mult": 0.3, "spread": 0.8, "droop": 0.2},
-    "long": {"strand_count": 16, "length_mult": 1.0, "spread": 0.9, "droop": 0.6},
-    "twintail": {"strand_count": 20, "length_mult": 0.8, "spread": 1.0, "droop": 0.4, "bunches": 2},
-    "ponytail": {"strand_count": 14, "length_mult": 0.7, "spread": 0.7, "droop": 0.5, "bunches": 1},
-    "bob": {"strand_count": 14, "length_mult": 0.35, "spread": 1.0, "droop": 0.3},
-    "hime_cut": {"strand_count": 18, "length_mult": 0.9, "spread": 0.95, "droop": 0.5},
-    "braid": {"strand_count": 12, "length_mult": 0.6, "spread": 0.6, "droop": 0.7, "bunches": 1},
+    "short":     {"front": 8,  "side": 6,  "back": 10, "length": 0.3,  "curve": 0.15, "bunches": 0},
+    "long":      {"front": 10, "side": 8,  "back": 14, "length": 1.0,  "curve": 0.4,  "bunches": 0},
+    "twintail":  {"front": 10, "side": 6,  "back": 8,  "length": 0.8,  "curve": 0.3,  "bunches": 2},
+    "ponytail":  {"front": 10, "side": 6,  "back": 6,  "length": 0.7,  "curve": 0.35, "bunches": 1},
+    "bob":       {"front": 10, "side": 8,  "back": 12, "length": 0.35, "curve": 0.2,  "bunches": 0},
+    "hime_cut":  {"front": 8,  "side": 12, "back": 12, "length": 0.9,  "curve": 0.3,  "bunches": 0},
+    "drill":     {"front": 8,  "side": 6,  "back": 8,  "length": 0.7,  "curve": 0.5,  "bunches": 2},
+    "braid":     {"front": 8,  "side": 6,  "back": 6,  "length": 0.6,  "curve": 0.35, "bunches": 1},
+    "odango":    {"front": 8,  "side": 6,  "back": 8,  "length": 0.4,  "curve": 0.2,  "bunches": 2},
+    "ahoge":     {"front": 10, "side": 6,  "back": 10, "length": 0.35, "curve": 0.15, "bunches": 0},
 }
 
 
 def create_hair(style: str, colors: list[str], length: float, gradient: bool, head_height: float):
-    """
-    Create procedural hair mesh.
-
-    Args:
-        style: Hair style name
-        colors: List of hex color strings
-        length: 0-1 length multiplier
-        gradient: Whether to apply color gradient
-        head_height: Z position of head center (meters)
-    """
+    """Create layered anime-style hair."""
     remove_aimm_objects("hair")
 
     config = HAIR_CONFIGS.get(style, HAIR_CONFIGS["short"])
-    strand_count = config["strand_count"]
-    length_mult = config["length_mult"] * (0.5 + length * 0.5)
-    spread = config["spread"]
-    droop = config["droop"]
+    length_mult = config["length"] * (0.5 + length * 0.5)
+    curve_str = config["curve"]
 
-    head_radius = 0.12  # Approximate head radius
-    hair_length = head_radius * 3 * length_mult
+    head_r = head_height / 7.0 * 0.45  # Approximate head radius
+    head_z = head_height * 0.92  # Head center Z
+    hair_length = head_r * 4.0 * length_mult
 
-    curves = []
+    seed = hash(style) % 10000
+    rng = random.Random(seed)  # Deterministic randomness per style
 
-    # Generate hair strands around the head
-    bunches = config.get("bunches", 0)
+    all_curves = []
 
-    for i in range(strand_count):
-        angle = (i / strand_count) * math.pi * 2
+    # Layer 1: Front bangs
+    _create_hair_layer(
+        all_curves, config["front"], head_z, head_r, hair_length * 0.4,
+        angle_start=-0.8, angle_end=0.8, y_bias=-1.0,
+        z_start_offset=0.3, curve_strength=curve_str * 0.5, rng=rng,
+        bevel_depth=0.006,
+    )
 
-        # Starting point on head surface
-        start_x = math.cos(angle) * head_radius * spread
-        start_y = math.sin(angle) * head_radius * spread * 0.8
-        start_z = head_height + head_radius * 0.3
+    # Layer 2: Side hair
+    for side in [-1, 1]:
+        _create_hair_layer(
+            all_curves, config["side"] // 2, head_z, head_r, hair_length * 0.7,
+            angle_start=side * 0.6, angle_end=side * 1.5, y_bias=-0.3,
+            z_start_offset=0.2, curve_strength=curve_str * 0.8, rng=rng,
+            bevel_depth=0.008,
+        )
 
-        # End point (hair falls down with some spread)
-        droop_factor = droop + (1 - droop) * 0.3
-        end_x = start_x * (1 + spread * 0.5)
-        end_y = start_y * (1 + spread * 0.3)
-        end_z = start_z - hair_length * droop_factor
+    # Layer 3: Back hair (main volume)
+    _create_hair_layer(
+        all_curves, config["back"], head_z, head_r, hair_length,
+        angle_start=0.8, angle_end=2 * math.pi - 0.8, y_bias=0.3,
+        z_start_offset=0.35, curve_strength=curve_str, rng=rng,
+        bevel_depth=0.010,
+    )
 
-        # Middle control point
-        mid_x = (start_x + end_x) * 0.5
-        mid_y = (start_y + end_y) * 0.5
-        mid_z = (start_z + end_z) * 0.5 + hair_length * 0.1
-
-        # Create curve
-        curve_data = bpy.data.curves.new(f"hair_strand_{i}", 'CURVE')
-        curve_data.dimensions = '3D'
-        curve_data.bevel_depth = 0.008  # Strand thickness
-        curve_data.bevel_resolution = 2
-
-        spline = curve_data.splines.new('BEZIER')
-        spline.bezier_points.add(2)  # 3 points total
-
-        # Start
-        p0 = spline.bezier_points[0]
-        p0.co = Vector((start_x, start_y, start_z))
-        p0.handle_right = p0.co + Vector((0, 0, -hair_length * 0.2))
-        p0.handle_left = p0.co + Vector((0, 0, hair_length * 0.1))
-
-        # Middle
-        p1 = spline.bezier_points[1]
-        p1.co = Vector((mid_x, mid_y, mid_z))
-        p1.handle_left = p1.co + Vector((-0.02, 0, 0.02))
-        p1.handle_right = p1.co + Vector((0.02, 0, -0.02))
-
-        # End
-        p2 = spline.bezier_points[2]
-        p2.co = Vector((end_x, end_y, end_z))
-        p2.handle_left = p2.co + Vector((0, 0, hair_length * 0.15))
-        p2.handle_right = p2.co + Vector((0, 0, -0.02))
-
-        curve_obj = bpy.data.objects.new(f"hair_strand_{i}", curve_data)
-        bpy.context.collection.objects.link(curve_obj)
-        curves.append(curve_obj)
-
-    # Handle bunches (twintail, ponytail)
+    # Layer 4: Bunches (twintail/ponytail)
+    bunches = config["bunches"]
     if bunches == 2:
-        _add_bunch(curves, head_height, hair_length, side=-1, spread=spread)
-        _add_bunch(curves, head_height, hair_length, side=1, spread=spread)
+        for side in [-1, 1]:
+            _create_bunch(all_curves, head_z, head_r, hair_length * 0.9,
+                          x_offset=side * head_r * 0.8, rng=rng, strand_count=8)
     elif bunches == 1:
-        _add_bunch(curves, head_height, hair_length, side=0, spread=spread * 0.5)
+        _create_bunch(all_curves, head_z, head_r, hair_length * 0.85,
+                      x_offset=0, rng=rng, strand_count=10)
+
+    # Ahoge (hair antenna)
+    if style == "ahoge":
+        _create_ahoge(all_curves, head_z, head_r)
+
+    if not all_curves:
+        return None
 
     # Convert all curves to mesh and join
     bpy.ops.object.select_all(action='DESELECT')
-    for c in curves:
+    for c in all_curves:
         c.select_set(True)
-    if curves:
-        bpy.context.view_layer.objects.active = curves[0]
-        bpy.ops.object.convert(target='MESH')
-        bpy.ops.object.join()
+    bpy.context.view_layer.objects.active = all_curves[0]
+    bpy.ops.object.convert(target='MESH')
+    bpy.ops.object.join()
 
-        hair = bpy.context.active_object
-        hair.name = "AIMoeMaker_Hair"
-        hair["aimm_type"] = "hair"
+    hair = bpy.context.active_object
+    hair.name = "AIMoeMaker_Hair"
+    hair["aimm_type"] = "hair"
 
-        # Apply material
-        color = colors[0] if colors else "#000000"
-        mat = create_material("AIMoeMaker_Hair", color)
-        if hair.data.materials:
-            hair.data.materials[0] = mat
-        else:
-            hair.data.materials.append(mat)
+    # Material
+    color = colors[0] if colors else "#000000"
+    mat = create_material("AIMoeMaker_Hair", color)
+    # Make hair slightly translucent for anime look
+    if mat.use_nodes:
+        bsdf = mat.node_tree.nodes.get("Principled BSDF")
+        if bsdf:
+            bsdf.inputs["Roughness"].default_value = 0.4
+            bsdf.inputs["Specular IOR Level"].default_value = 0.6
 
-        bpy.ops.object.shade_smooth()
-        move_to_collection(hair, "AIMoeMaker")
-        set_active(hair)
-        return hair
+    if hair.data.materials:
+        hair.data.materials[0] = mat
+    else:
+        hair.data.materials.append(mat)
 
-    return None
+    bpy.ops.object.shade_smooth()
+
+    # Parent to body
+    body = find_aimm_object("body")
+    if body:
+        hair.parent = body
+
+    move_to_collection(hair, "AIMoeMaker")
+    set_active(hair)
+    return hair
 
 
-def _add_bunch(curves: list, head_height: float, hair_length: float, side: int, spread: float):
-    """Add a ponytail/twintail bunch of curves."""
-    bunch_count = 6
-    base_x = side * 0.1 * spread
-    base_z = head_height - 0.05
+def _create_hair_layer(curves_list, count, head_z, head_r, length,
+                       angle_start, angle_end, y_bias, z_start_offset,
+                       curve_strength, rng, bevel_depth):
+    """Create a layer of hair strands covering an arc around the head."""
+    for i in range(count):
+        t = i / max(count - 1, 1)
+        angle = angle_start + t * (angle_end - angle_start)
 
-    for i in range(bunch_count):
-        angle = (i / bunch_count) * math.pi * 0.5 - math.pi * 0.25
+        # Add slight randomness
+        angle += rng.uniform(-0.1, 0.1)
+        length_var = length * rng.uniform(0.85, 1.15)
 
-        start = Vector((base_x, -0.08, base_z))
-        end = Vector((
-            base_x + math.cos(angle) * 0.05 * side if side != 0 else 0,
-            -0.1 - hair_length * 0.3,
-            base_z - hair_length * 0.8
-        ))
-        mid = (start + end) * 0.5 + Vector((0, -0.05, 0.05))
+        # Start position on scalp
+        sx = math.sin(angle) * head_r * 0.95
+        sy = math.cos(angle) * head_r * 0.95 * (0.8 + y_bias * 0.2)
+        sz = head_z + head_r * z_start_offset
 
-        curve_data = bpy.data.curves.new(f"hair_bunch_{side}_{i}", 'CURVE')
+        # End position (hair falls down with gravity + spread)
+        spread = 1.0 + length_var * 0.3
+        ex = sx * spread + rng.uniform(-0.01, 0.01)
+        ey = sy * spread * 0.8 + rng.uniform(-0.005, 0.005)
+        ez = sz - length_var * (0.6 + curve_strength)
+
+        # Control points for natural curve
+        m1x = sx * 1.05
+        m1y = sy * 1.05
+        m1z = sz - length_var * 0.25
+
+        m2x = (sx + ex) * 0.5
+        m2y = (sy + ey) * 0.5
+        m2z = (sz + ez) * 0.5 + length_var * 0.05
+
+        # Create Bezier curve
+        curve_data = bpy.data.curves.new(f"hair_{len(curves_list)}", 'CURVE')
         curve_data.dimensions = '3D'
-        curve_data.bevel_depth = 0.01
+        curve_data.bevel_depth = bevel_depth
         curve_data.bevel_resolution = 2
+
+        # Taper: thicker at root, thinner at tip
+        curve_data.taper_radius_mode = 'OVERRIDE'
+
+        spline = curve_data.splines.new('BEZIER')
+        spline.bezier_points.add(3)  # 4 points total
+
+        points = [
+            (Vector((sx, sy, sz)), 0.08),      # Root - wide
+            (Vector((m1x, m1y, m1z)), 0.06),   # Near root
+            (Vector((m2x, m2y, m2z)), 0.04),   # Middle
+            (Vector((ex, ey, ez)), 0.01),       # Tip - thin
+        ]
+
+        for j, (pos, _) in enumerate(points):
+            bp = spline.bezier_points[j]
+            bp.co = pos
+            bp.handle_type = 'AUTO'
+            bp.radius = points[j][1] / bevel_depth  # Taper via radius
+
+        curve_obj = bpy.data.objects.new(f"hair_{len(curves_list)}", curve_data)
+        bpy.context.collection.objects.link(curve_obj)
+        curves_list.append(curve_obj)
+
+
+def _create_bunch(curves_list, head_z, head_r, length, x_offset, rng, strand_count=8):
+    """Create a ponytail/twintail bunch."""
+    base_y = head_r * 0.7  # Behind the head
+    base_z = head_z - head_r * 0.2
+
+    for i in range(strand_count):
+        angle = (i / strand_count) * math.pi * 2
+        r_var = rng.uniform(0.01, 0.03)
+
+        sx = x_offset + math.cos(angle) * r_var
+        sy = base_y + math.sin(angle) * r_var
+        sz = base_z
+
+        # Bunch hangs down with some sway
+        ex = sx + rng.uniform(-0.02, 0.02)
+        ey = sy + length * 0.1
+        ez = sz - length * 0.85
+
+        mx = (sx + ex) * 0.5
+        my = (sy + ey) * 0.5 + 0.02
+        mz = (sz + ez) * 0.5
+
+        curve_data = bpy.data.curves.new(f"bunch_{len(curves_list)}", 'CURVE')
+        curve_data.dimensions = '3D'
+        curve_data.bevel_depth = 0.012
+        curve_data.bevel_resolution = 3
 
         spline = curve_data.splines.new('BEZIER')
         spline.bezier_points.add(2)
 
-        for j, (pos, hl, hr) in enumerate([
-            (start, start + Vector((0, 0, 0.03)), start + Vector((0, -0.03, -0.03))),
-            (mid, mid + Vector((0, 0.02, 0.02)), mid + Vector((0, -0.02, -0.02))),
-            (end, end + Vector((0, 0.02, 0.02)), end + Vector((0, 0, -0.01))),
+        for j, (pos, rad) in enumerate([
+            (Vector((sx, sy, sz)), 1.2),
+            (Vector((mx, my, mz)), 0.8),
+            (Vector((ex, ey, ez)), 0.3),
         ]):
-            p = spline.bezier_points[j]
-            p.co = pos
-            p.handle_left = hl
-            p.handle_right = hr
+            bp = spline.bezier_points[j]
+            bp.co = pos
+            bp.handle_type = 'AUTO'
+            bp.radius = rad
 
-        curve_obj = bpy.data.objects.new(f"hair_bunch_{side}_{i}", curve_data)
+        curve_obj = bpy.data.objects.new(f"bunch_{len(curves_list)}", curve_data)
         bpy.context.collection.objects.link(curve_obj)
-        curves.append(curve_obj)
+        curves_list.append(curve_obj)
+
+
+def _create_ahoge(curves_list, head_z, head_r):
+    """Create a single ahoge (hair antenna) strand."""
+    curve_data = bpy.data.curves.new("ahoge", 'CURVE')
+    curve_data.dimensions = '3D'
+    curve_data.bevel_depth = 0.004
+    curve_data.bevel_resolution = 2
+
+    spline = curve_data.splines.new('BEZIER')
+    spline.bezier_points.add(2)
+
+    sz = head_z + head_r * 0.4
+    points = [
+        (Vector((0, -head_r * 0.3, sz)), 1.5),
+        (Vector((0.02, -head_r * 0.5, sz + head_r * 0.5)), 1.0),
+        (Vector((-0.01, -head_r * 0.2, sz + head_r * 0.7)), 0.3),
+    ]
+
+    for j, (pos, rad) in enumerate(points):
+        bp = spline.bezier_points[j]
+        bp.co = pos
+        bp.handle_type = 'AUTO'
+        bp.radius = rad
+
+    curve_obj = bpy.data.objects.new("ahoge", curve_data)
+    bpy.context.collection.objects.link(curve_obj)
+    curves_list.append(curve_obj)
