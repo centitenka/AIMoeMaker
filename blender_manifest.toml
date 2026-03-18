@@ -1,0 +1,17 @@
+schema_version = "1.0.0"
+
+id = "ai_moe_maker"
+version = "0.1.0"
+name = "AIMoeMaker"
+tagline = "AI-powered MMD model creation through natural language"
+maintainer = "AIMoeMaker Team"
+type = "add-on"
+
+[blender_version_min]
+major = 4
+minor = 2
+patch = 0
+
+[permissions]
+network = "AI API calls and asset search"
+files = "Project save/load and asset management"
