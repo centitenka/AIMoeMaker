@@ -4,8 +4,8 @@ All bpy operations are guarded by context["bpy_available"].
 """
 from __future__ import annotations
 
-from commands.base import BaseCommand
-from core.model_state import BodyState
+from .base import BaseCommand
+from ..core.model_state import BodyState
 
 
 # ---------------------------------------------------------------------------
@@ -95,7 +95,7 @@ class CreateBaseBody(BaseCommand):
 
     def _create_mesh(self, state, context) -> None:  # pragma: no cover
         """Create the base mesh in Blender (only called when bpy is available)."""
-        from blender_ops.body_ops import create_body
+        from ..blender_ops.body_ops import create_body
         create_body(state.body.height, state.body.body_type, state.body.bust, state.body.waist, state.body.hip, state.body.head_ratio)
 
 
@@ -128,7 +128,7 @@ class SetHeight(BaseCommand):
 
     def _apply_height(self, state, context) -> None:  # pragma: no cover
         """Apply height scaling in Blender."""
-        from blender_ops.body_ops import apply_height
+        from ..blender_ops.body_ops import apply_height
         apply_height(state.body.height)
 
 
@@ -165,9 +165,16 @@ class AdjustProportions(BaseCommand):
         }
 
     def _apply_proportions(self, state, context) -> None:  # pragma: no cover
-        """Apply proportion shape keys in Blender."""
-        from blender_ops.body_ops import create_body
-        create_body(state.body.height, state.body.body_type, state.body.bust, state.body.waist, state.body.hip, state.body.head_ratio)
+        """Apply proportion changes in Blender.
+
+        Uses the safe rebuild path that preserves parent-child relationships.
+        """
+        from ..blender_ops.body_ops import create_body
+        create_body(
+            state.body.height, state.body.body_type,
+            state.body.bust, state.body.waist,
+            state.body.hip, state.body.head_ratio,
+        )
 
 
 # ---------------------------------------------------------------------------

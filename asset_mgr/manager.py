@@ -9,8 +9,8 @@ import zipfile
 import tempfile
 import urllib.request
 from typing import Optional
-from asset_mgr.local_store import LocalAssetStore
-from asset_mgr.sources.github_source import GitHubAssetSource
+from .local_store import LocalAssetStore
+from .sources.github_source import GitHubAssetSource
 
 
 class AssetManager:

@@ -51,7 +51,7 @@ def rename_bones_for_pmx(armature_obj) -> dict:
         return {"success": False, "error": "无骨骼对象"}
 
     # Bone name mapping (JP -> EN) from our skeleton_ops
-    from blender_ops.skeleton_ops import MMD_BONES
+    from ..blender_ops.skeleton_ops import MMD_BONES
     jp_to_en = {bone[0]: bone[1] for bone in MMD_BONES}
 
     renamed = 0

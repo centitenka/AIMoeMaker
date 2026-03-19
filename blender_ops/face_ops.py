@@ -4,7 +4,7 @@ Face detail mesh generation: anime-style eyes, nose, mouth indicators.
 import bpy
 import math
 from mathutils import Vector
-from blender_ops.utils import (
+from .utils import (
     remove_aimm_objects, find_aimm_object, create_material,
     move_to_collection, set_active, hex_to_rgb
 )

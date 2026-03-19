@@ -3,7 +3,7 @@
 Stage 4: Convert physics setup to MMD-compatible format.
 Verifies rigid bodies and joints are correctly configured for PMX export.
 """
-from blender_ops.utils import find_all_aimm_objects
+from ..blender_ops.utils import find_all_aimm_objects
 
 
 def verify_physics() -> dict:

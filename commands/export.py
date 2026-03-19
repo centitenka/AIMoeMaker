@@ -1,5 +1,5 @@
-from commands.base import BaseCommand
-from core.model_state import ModelState
+from .base import BaseCommand
+from ..core.model_state import ModelState
 
 class ValidatePmx(BaseCommand):
     action = "validate_pmx"
@@ -16,7 +16,7 @@ class ValidatePmx(BaseCommand):
 
         # mmd_tools check
         try:
-            from pipeline.mmd_tools_compat import is_mmd_tools_available
+            from ..pipeline.mmd_tools_compat import is_mmd_tools_available
             if not is_mmd_tools_available():
                 warnings.append("mmd_tools 未安装（无法直接导出PMX，但可保存为.blend）")
         except ImportError:
@@ -36,7 +36,7 @@ class ExportPmx(BaseCommand):
             return {"success": False, "error": "请指定导出路径(path)"}
 
         # Run the full 6-stage PMX export pipeline
-        from pipeline.pmx_export import run_export_pipeline
+        from ..pipeline.pmx_export import run_export_pipeline
         result = run_export_pipeline(path)
 
         if result["success"]:

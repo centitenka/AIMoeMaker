@@ -17,10 +17,10 @@ except ImportError:
     _bpy_available = False
 
 if _bpy_available:
-    from ui.preferences import PREFERENCE_CLASSES
-    from ui.operators import OPERATOR_CLASSES
-    from ui.chat_panel import PANEL_CLASSES
-    from ui.quick_panel import (
+    from .ui.preferences import PREFERENCE_CLASSES
+    from .ui.operators import OPERATOR_CLASSES
+    from .ui.chat_panel import PANEL_CLASSES
+    from .ui.quick_panel import (
         QUICK_PANEL_CLASSES,
         _on_body_type_update,
         _on_height_update,
@@ -28,11 +28,11 @@ if _bpy_available:
         _on_eye_shape_update,
         _on_face_shape_update,
     )
-    from ui.quick_operators import QUICK_OPERATOR_CLASSES
-    from ui.node_view import NODE_TREE_CLASSES, register_node_categories, unregister_node_categories
-    from ui.node_nodes import ALL_NODE_CLASSES, NODE_ITEMS_BY_CATEGORY
-    from ui.node_eval import NODE_EVAL_CLASSES
-    from ui.node_header import draw_aimm_node_header
+    from .ui.quick_operators import QUICK_OPERATOR_CLASSES
+    from .ui.node_view import NODE_TREE_CLASSES, register_node_categories, unregister_node_categories
+    from .ui.node_nodes import ALL_NODE_CLASSES, NODE_ITEMS_BY_CATEGORY
+    from .ui.node_eval import NODE_EVAL_CLASSES
+    from .ui.node_header import draw_aimm_node_header
 
     ALL_CLASSES = PREFERENCE_CLASSES + OPERATOR_CLASSES + PANEL_CLASSES + QUICK_PANEL_CLASSES + QUICK_OPERATOR_CLASSES + NODE_TREE_CLASSES + ALL_NODE_CLASSES + NODE_EVAL_CLASSES
 

@@ -6,7 +6,7 @@ import bpy
 import bmesh
 import math
 from mathutils import Vector
-from blender_ops.utils import (
+from .utils import (
     find_aimm_object, create_material, move_to_collection,
     set_active, hex_to_rgb
 )
@@ -104,6 +104,12 @@ def create_clothing(clothing_type: str, color: str, height_cm: float, index: int
     bm.to_mesh(cloth.data)
     bm.free()
 
+    # Material — assign immediately after mesh shaping to ensure valid material
+    # before any operation (edit mode, shade_smooth, modifiers) that may trigger
+    # depsgraph evaluation
+    mat = create_material(f"AIMoeMaker_Cloth_{index}", color)
+    cloth.data.materials.append(mat)
+
     # Delete top and bottom faces for open clothing look
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='DESELECT')
@@ -137,10 +143,6 @@ def create_clothing(clothing_type: str, color: str, height_cm: float, index: int
     cloth["aimm_type"] = "clothing"
     cloth["aimm_clothing_type"] = clothing_type
     cloth["aimm_clothing_index"] = index
-
-    # Apply material
-    mat = create_material(f"AIMoeMaker_Cloth_{index}", color)
-    cloth.data.materials.append(mat)
 
     # Parent to body
     body = find_aimm_object("body")

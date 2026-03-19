@@ -3,7 +3,7 @@ Quick Panel: direct manipulation UI with sliders, dropdowns, and buttons.
 Alternative to chat-based interaction.
 """
 import bpy
-from ui.operators import get_session, get_engine
+from .operators import get_session, get_engine
 
 
 # --- Property Update Callbacks ---

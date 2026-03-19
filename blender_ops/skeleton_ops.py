@@ -3,7 +3,7 @@ MMD standard armature creation with correct bone hierarchy and positions.
 """
 import bpy
 from mathutils import Vector
-from blender_ops.utils import remove_aimm_objects, find_aimm_object, move_to_collection, set_active
+from .utils import remove_aimm_objects, find_aimm_object, move_to_collection, set_active
 
 # MMD standard bone definitions: (name_jp, name_en, head_offset, tail_offset, parent_jp)
 # Positions are relative to character standing at origin, facing -Y, height normalized to 1.0
@@ -120,6 +120,7 @@ def create_skeleton(height_cm: float):
     # Parent body mesh to armature if it exists
     body = find_aimm_object("body")
     if body:
+        bpy.ops.object.select_all(action='DESELECT')
         body.select_set(True)
         arm_obj.select_set(True)
         bpy.context.view_layer.objects.active = arm_obj

@@ -1,5 +1,5 @@
-from commands.base import BaseCommand
-from core.model_state import ModelState
+from .base import BaseCommand
+from ..core.model_state import ModelState
 
 STANDARD_EXPRESSIONS = ["真面目", "困る", "にこり", "怒り", "上", "下", "まばたき", "笑い", "ウィンク", "ウィンク右", "ウィンク２", "あ", "い", "う", "え", "お", "△", "∧", "ω", "照れ"]
 
@@ -15,7 +15,7 @@ class CreateMorph(BaseCommand):
         if name not in state.morphs.expressions:
             state.morphs.expressions.append(name)
         if context.get("bpy_available", False):
-            from blender_ops.morph_ops import create_morph as bpy_create_morph
+            from ..blender_ops.morph_ops import create_morph as bpy_create_morph
             bpy_create_morph(name, params.get("category", "other"))
         return {"success": True, "message": f"已创建表情: {name}"}
 
@@ -32,7 +32,7 @@ class AddExpressionSet(BaseCommand):
             if expr not in state.morphs.expressions:
                 state.morphs.expressions.append(expr)
         if context.get("bpy_available", False):
-            from blender_ops.morph_ops import add_expression_set as bpy_add_expressions
+            from ..blender_ops.morph_ops import add_expression_set as bpy_add_expressions
             bpy_add_expressions(preset)
         return {"success": True, "message": f"已添加{preset}表情集（{len(STANDARD_EXPRESSIONS)}个表情）"}
 

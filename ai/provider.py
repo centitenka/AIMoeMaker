@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
-from prompts.intent_schema import AIResponse
+from ..prompts.intent_schema import AIResponse
 
 
 @dataclass

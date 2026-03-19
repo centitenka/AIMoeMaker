@@ -30,7 +30,7 @@ def evaluate_node_tree(node_tree) -> dict:
     errors = []
 
     # Get model state from session
-    from ui.operators import get_session, get_engine
+    from .operators import get_session, get_engine
     session = get_session()
 
     context_dict = {
@@ -39,7 +39,7 @@ def evaluate_node_tree(node_tree) -> dict:
     }
     engine = get_engine()
 
-    from utils.undo import push_undo
+    from ..utils.undo import push_undo
     push_undo("节点图执行")
 
     for node in sorted_nodes:

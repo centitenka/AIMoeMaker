@@ -59,6 +59,9 @@ class HairState:
     has_ahoge: bool = False
     has_twintails: bool = False
     accessory: str = "none"
+    colors: list = field(default_factory=list)
+    gradient: bool = False
+    physics_enabled: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -68,6 +71,9 @@ class HairState:
             "has_ahoge": self.has_ahoge,
             "has_twintails": self.has_twintails,
             "accessory": self.accessory,
+            "colors": list(self.colors),
+            "gradient": self.gradient,
+            "physics_enabled": self.physics_enabled,
         }
 
     @classmethod
@@ -75,8 +81,11 @@ class HairState:
         known = {
             "style", "length", "color",
             "has_ahoge", "has_twintails", "accessory",
+            "colors", "gradient", "physics_enabled",
         }
         kwargs = {k: v for k, v in d.items() if k in known}
+        if "colors" in kwargs:
+            kwargs["colors"] = list(kwargs["colors"])
         return cls(**kwargs)
 
 
@@ -115,6 +124,8 @@ class ClothingItem:
     style: str = "none"
     color: str = "white"
     material: str = "cotton"
+    clothing_type: str = "generic"
+    physics_enabled: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -122,25 +133,27 @@ class ClothingItem:
             "style": self.style,
             "color": self.color,
             "material": self.material,
+            "clothing_type": self.clothing_type,
+            "physics_enabled": self.physics_enabled,
         }
 
     @classmethod
     def from_dict(cls, d: dict) -> "ClothingItem":
-        known = {"slot", "style", "color", "material"}
+        known = {"slot", "style", "color", "material", "clothing_type", "physics_enabled"}
         kwargs = {k: v for k, v in d.items() if k in known}
         return cls(**kwargs)
 
 
 @dataclass
 class AccessoryItem:
-    name: str = "none"
+    accessory_type: str = "none"
     slot: str = "head"
     position: list = field(default_factory=lambda: [0.0, 0.0, 0.0])
     scale: float = 1.0
 
     def to_dict(self) -> dict:
         return {
-            "name": self.name,
+            "accessory_type": self.accessory_type,
             "slot": self.slot,
             "position": list(self.position),
             "scale": self.scale,
@@ -148,7 +161,7 @@ class AccessoryItem:
 
     @classmethod
     def from_dict(cls, d: dict) -> "AccessoryItem":
-        known = {"name", "slot", "position", "scale"}
+        known = {"accessory_type", "slot", "position", "scale"}
         kwargs = {k: v for k, v in d.items() if k in known}
         if "position" in kwargs:
             kwargs["position"] = list(kwargs["position"])
@@ -341,7 +354,7 @@ class ModelState:
 
         # 配件
         if self.accessories:
-            acc_strs = [f"{a.name}@{a.slot}" for a in self.accessories]
+            acc_strs = [f"{a.accessory_type}@{a.slot}" for a in self.accessories]
             lines.append("配件: " + ", ".join(acc_strs))
 
         # 骨骼

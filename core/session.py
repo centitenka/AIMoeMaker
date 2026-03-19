@@ -2,7 +2,7 @@ import json
 import os
 import time
 from dataclasses import dataclass, field
-from core.model_state import ModelState
+from .model_state import ModelState
 
 SCHEMA_VERSION = 1
 

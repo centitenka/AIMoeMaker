@@ -3,7 +3,7 @@
 Stage 6: PMX file export.
 Orchestrates the full pipeline and calls mmd_tools for final export.
 """
-from blender_ops.utils import find_aimm_object
+from ..blender_ops.utils import find_aimm_object
 
 
 def run_export_pipeline(filepath: str) -> dict:
@@ -31,7 +31,7 @@ def run_export_pipeline(filepath: str) -> dict:
     stages = []
 
     # Stage 1: Mesh validation
-    from pipeline.mesh_validation import validate_and_repair
+    from .mesh_validation import validate_and_repair
     result = validate_and_repair(body)
     stages.append({"name": "网格验证", "result": result})
     if not result["success"]:
@@ -39,7 +39,7 @@ def run_export_pipeline(filepath: str) -> dict:
 
     # Stage 2: Skeleton verification
     if skeleton:
-        from pipeline.skeleton_setup import verify_skeleton, rename_bones_for_pmx
+        from .skeleton_setup import verify_skeleton, rename_bones_for_pmx
         skel_result = verify_skeleton(skeleton)
         stages.append({"name": "骨骼验证", "result": skel_result})
 
@@ -53,7 +53,7 @@ def run_export_pipeline(filepath: str) -> dict:
 
     # Stage 3: Weight verification
     if skeleton:
-        from pipeline.weight_paint import verify_weights, fix_unweighted_vertices
+        from .weight_paint import verify_weights, fix_unweighted_vertices
         weight_result = verify_weights(body, skeleton)
         stages.append({"name": "权重检查", "result": weight_result})
 
@@ -64,17 +64,17 @@ def run_export_pipeline(filepath: str) -> dict:
         stages.append({"name": "权重检查", "result": {"success": False, "warning": "无骨骼，跳过权重检查"}})
 
     # Stage 4: Physics verification
-    from pipeline.physics_setup import verify_physics
+    from .physics_setup import verify_physics
     physics_result = verify_physics()
     stages.append({"name": "物理验证", "result": physics_result})
 
     # Stage 5: Morph verification
-    from pipeline.morph_setup import verify_morphs
+    from .morph_setup import verify_morphs
     morph_result = verify_morphs(body)
     stages.append({"name": "表情验证", "result": morph_result})
 
     # Stage 6: PMX Export
-    from pipeline.mmd_tools_compat import is_mmd_tools_available, export_pmx_file, get_install_guidance
+    from .mmd_tools_compat import is_mmd_tools_available, export_pmx_file, get_install_guidance
 
     if not is_mmd_tools_available():
         # Fallback: save as .blend file instead
@@ -128,7 +128,7 @@ def get_pipeline_status() -> dict:
         "has_shape_keys": body is not None and body.data.shape_keys is not None if body and body.type == 'MESH' else False,
     }
 
-    from pipeline.mmd_tools_compat import is_mmd_tools_available
+    from .mmd_tools_compat import is_mmd_tools_available
     status["mmd_tools_available"] = is_mmd_tools_available()
 
     return status

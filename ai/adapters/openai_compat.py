@@ -2,8 +2,8 @@ import json
 import urllib.request
 import urllib.error
 
-from ai.provider import AIProvider, AIProviderConfig
-from prompts.intent_schema import AIResponse, parse_ai_response
+from ..provider import AIProvider, AIProviderConfig
+from ...prompts.intent_schema import AIResponse, parse_ai_response
 
 
 class OpenAICompatAdapter(AIProvider):

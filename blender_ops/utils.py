@@ -20,10 +20,16 @@ def find_all_aimm_objects(aimm_type: str) -> list:
 
 
 def remove_aimm_objects(aimm_type: str):
-    """Remove all objects with the given aimm_type from the scene."""
+    """Remove all objects with the given aimm_type from the scene.
+
+    Before removing, orphans any children so they remain in the scene.
+    """
     import bpy
     objects = find_all_aimm_objects(aimm_type)
     for obj in objects:
+        # Reparent children to this object's parent (or unparent)
+        for child in list(obj.children):
+            child.parent = obj.parent
         # Remove mesh/curve data too
         data = obj.data
         bpy.data.objects.remove(obj, do_unlink=True)
@@ -32,6 +38,20 @@ def remove_aimm_objects(aimm_type: str):
                 bpy.data.meshes.remove(data)
             elif hasattr(bpy.data, 'curves') and isinstance(data, bpy.types.Curve):
                 bpy.data.curves.remove(data)
+
+
+def reparent_aimm_children(new_parent_obj):
+    """Re-parent all orphaned AIMoeMaker objects to new_parent_obj.
+
+    Called after body recreation to restore parent-child relationships
+    for hair, eyes, clothing, etc.
+    """
+    import bpy
+    child_types = ("hair", "eye", "clothing", "accessory")
+    for obj in bpy.data.objects:
+        aimm_type = obj.get("aimm_type")
+        if aimm_type in child_types and obj.parent is None and obj != new_parent_obj:
+            obj.parent = new_parent_obj
 
 
 def create_material(name: str, color_hex: str) -> "bpy.types.Material":

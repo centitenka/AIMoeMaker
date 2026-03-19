@@ -7,7 +7,7 @@ import bpy
 import math
 import random
 from mathutils import Vector
-from blender_ops.utils import (
+from .utils import (
     remove_aimm_objects, find_aimm_object, create_material,
     move_to_collection, set_active
 )
@@ -99,10 +99,10 @@ def create_hair(style: str, colors: list[str], length: float, gradient: bool, he
     hair.name = "AIMoeMaker_Hair"
     hair["aimm_type"] = "hair"
 
-    # Material
+    # Material — assign immediately after join to ensure valid material
+    # before any operation that may trigger depsgraph evaluation
     color = colors[0] if colors else "#000000"
     mat = create_material("AIMoeMaker_Hair", color)
-    # Make hair slightly translucent for anime look
     if mat.use_nodes:
         bsdf = mat.node_tree.nodes.get("Principled BSDF")
         if bsdf:

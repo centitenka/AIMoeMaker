@@ -1,5 +1,5 @@
-from commands.base import BaseCommand
-from core.model_state import ModelState, FaceState
+from .base import BaseCommand
+from ..core.model_state import ModelState, FaceState
 
 EYE_SHAPES = ["round", "almond", "cat", "droopy", "tsurime", "tareme"]
 FACE_SHAPES = ["oval", "round", "heart", "square", "diamond"]
@@ -13,8 +13,8 @@ class SetEyeShape(BaseCommand):
         shape = params.get("shape", "round")
         state.face.eye_shape = shape
         if context.get("bpy_available", False):
-            from blender_ops.face_ops import create_eyes
-            from blender_ops.utils import find_aimm_object
+            from ..blender_ops.face_ops import create_eyes
+            from ..blender_ops.utils import find_aimm_object
             body = find_aimm_object("body")
             if body:
                 head_z = body.get("aimm_height", 158.0) / 100.0 * 0.92
@@ -32,7 +32,7 @@ class SetEyeColor(BaseCommand):
         color = params.get("color", "#663300")
         state.face.eye_color = color
         if context.get("bpy_available", False):
-            from blender_ops.face_ops import update_eye_color
+            from ..blender_ops.face_ops import update_eye_color
             update_eye_color(color)
         return {"success": True, "message": f"瞳色已设置为{color}"}
 

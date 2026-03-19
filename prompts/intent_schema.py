@@ -62,6 +62,7 @@ class AIResponse:
     reply: str = ""
     intents: List[Intent] = field(default_factory=list)
     raw: str = ""
+    continue_workflow: bool = False
 
 
 def _extract_json(text: str) -> Optional[str]:
@@ -149,7 +150,8 @@ def parse_ai_response(raw_text: str) -> AIResponse:
 
     reply = data.get("reply", "")
     raw_intents = data.get("intents", [])
+    continue_workflow = bool(data.get("continue", False))
 
     intents = [_parse_intent(i) for i in raw_intents if isinstance(i, dict)]
 
-    return AIResponse(reply=reply, intents=intents, raw=raw_text)
+    return AIResponse(reply=reply, intents=intents, raw=raw_text, continue_workflow=continue_workflow)

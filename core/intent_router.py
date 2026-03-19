@@ -1,5 +1,5 @@
 from typing import Callable, Optional
-from prompts.intent_schema import AIResponse, Intent
+from ..prompts.intent_schema import AIResponse, Intent
 
 
 class IntentRouter:

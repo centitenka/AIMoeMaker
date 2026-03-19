@@ -4,7 +4,7 @@ MMD physics setup: rigid bodies and joints for hair/cloth dynamics.
 """
 import bpy
 from mathutils import Vector
-from blender_ops.utils import find_aimm_object, find_all_aimm_objects
+from .utils import find_aimm_object, find_all_aimm_objects
 
 
 def setup_hair_physics(stiffness: float = 0.5, damping: float = 0.3):

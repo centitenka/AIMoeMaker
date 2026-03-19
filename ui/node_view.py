@@ -87,14 +87,14 @@ class AIMoeMakerBaseNode(Node):
 
     def execute(self, model_state, context_dict) -> dict:
         """Execute this node's command. Called by the evaluation engine."""
-        from core.command_engine import CommandEngine
+        from ..core.command_engine import CommandEngine
         action = self.get_command_action()
         params = self.get_command_params()
         if not action:
             return {"success": False, "error": "节点未定义指令"}
 
         # Use the global engine
-        from ui.operators import get_engine
+        from .operators import get_engine
         engine = get_engine()
         return engine.execute(action, params, context_dict)
 
@@ -158,19 +158,18 @@ def get_node_categories(node_items_by_category: dict) -> list:
     """
     categories = []
 
-    cat_classes = {
-        "身体": AIMM_NODE_CAT_Body,
-        "头发": AIMM_NODE_CAT_Hair,
-        "面部": AIMM_NODE_CAT_Face,
-        "服装/配饰": AIMM_NODE_CAT_Clothing,
-        "骨骼/物理/导出": AIMM_NODE_CAT_Advanced,
-    }
+    cat_defs = [
+        ("AIMM_NODES_Body", "身体", AIMM_NODE_CAT_Body),
+        ("AIMM_NODES_Hair", "头发", AIMM_NODE_CAT_Hair),
+        ("AIMM_NODES_Face", "面部", AIMM_NODE_CAT_Face),
+        ("AIMM_NODES_Clothing", "服装/配饰", AIMM_NODE_CAT_Clothing),
+        ("AIMM_NODES_Advanced", "骨骼/物理/导出", AIMM_NODE_CAT_Advanced),
+    ]
 
-    for cat_name, cat_cls in cat_classes.items():
-        items = node_items_by_category.get(cat_name, [])
+    for cat_id, cat_label, cat_cls in cat_defs:
+        items = node_items_by_category.get(cat_label, [])
         if items:
-            cat_id = f"AIMM_NODES_{cat_name}"
-            categories.append(cat_cls(cat_id, cat_name, items=items))
+            categories.append(cat_cls(cat_id, cat_label, items=items))
 
     return categories
 

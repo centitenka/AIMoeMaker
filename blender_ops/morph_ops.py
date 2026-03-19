@@ -3,7 +3,7 @@
 Shape key (morph) creation for MMD facial expressions.
 """
 import bpy
-from blender_ops.utils import find_aimm_object
+from .utils import find_aimm_object
 
 
 # Standard MMD expression definitions

@@ -2,8 +2,8 @@
 Operators for Quick Panel — direct command execution without AI.
 """
 import bpy
-from ui.operators import get_session, get_engine
-from utils.undo import push_undo
+from .operators import get_session, get_engine
+from ..utils.undo import push_undo
 
 
 def _exec_command(action, params):

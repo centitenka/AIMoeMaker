@@ -1,5 +1,5 @@
-from commands.base import BaseCommand
-from core.model_state import ModelState, AccessoryItem
+from .base import BaseCommand
+from ..core.model_state import ModelState, AccessoryItem
 
 class AddAccessory(BaseCommand):
     action = "add_accessory"

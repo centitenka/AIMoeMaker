@@ -5,13 +5,12 @@ Creates a smooth organic anime-style body from a vertex skeleton.
 import bpy
 import bmesh
 from mathutils import Vector
-from blender_ops.utils import remove_aimm_objects, create_material, move_to_collection, set_active
+from .utils import remove_aimm_objects, reparent_aimm_children, create_material, move_to_collection, set_active
 
 
 def create_body(height_cm: float, body_type: str, bust: float, waist: float, hip: float, head_ratio: float):
     """Create a parametric humanoid body mesh using Skin modifier."""
     remove_aimm_objects("body")
-    remove_aimm_objects("eye")
 
     h = height_cm / 100.0  # meters
     head_count = 6.0 + (1.0 - head_ratio) * 2.5
@@ -175,6 +174,11 @@ def create_body(height_cm: float, body_type: str, bust: float, waist: float, hip
     body.data.materials.append(mat)
 
     move_to_collection(body, "AIMoeMaker")
+
+    # Re-parent orphaned AIMoeMaker children (hair, eyes, clothing)
+    # that lost their parent when the old body was removed
+    reparent_aimm_children(body)
+
     set_active(body)
 
     return body
@@ -182,7 +186,7 @@ def create_body(height_cm: float, body_type: str, bust: float, waist: float, hip
 
 def apply_height(height_cm: float):
     """Scale existing body to new height."""
-    from blender_ops.utils import find_aimm_object
+    from .utils import find_aimm_object
     body = find_aimm_object("body")
     if body is None:
         return
